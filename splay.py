@@ -1,72 +1,130 @@
-import sys
-
-sys.setrecursionlimit(15000)
-levels = []
-
-def height(node):
-    if node is None:
-        return -1
-    return max(height(node.left), height(node.right)) + 1
-
-def printLevels():
-    maxLevel = 0
-    for thing in levels:
-        if thing[0] > maxLevel:
-            maxLevel = thing[0]
-        
-    thing = sorted(levels, key=lambda l: l[0])
-    for i in range(maxLevel+1):
-        values = [x[1] for x in thing if x[0] == i]
-        print "Level {}: {}".format(i, values)
-        
-
-def inOrder(root, level=0):
-    if root:
-        inOrder(root.left, level+1)
-        levels.append([level, root.key])
-        inOrder(root.right, level+1)
+from copy import deepcopy
 
 class Node:
     def __init__(self, key):
         self.key = key
-        self.left = self.right = None
-
-    def equals(self, node):
-        return self.key == node.key
+        self.left = None
+        self.right = None
 
 class SplayTree:
     def __init__(self):
         self.root = None
-        self.header = Node(None) #For splay()
-
+        self.header = Node(None)
+        self.levels = []
+        
+    @classmethod
+    def height(node):
+        """Return the height of a node"""
+        if node is None:
+            return -1
+        return max(height(node.left), height(node.right)) + 1
+        
+    def inOrderWalk(self, root, level=0):
+        """Walk the tree in order(L - Root - R), updates class variable
+        self.levels which is a 2D array of all the nodes and their (Level, Key)
+        
+        - Particular to the assignment, 'level' is synonymous with 'Size, S(x)',
+        AKA 'the number of nodes in the subtree rooted at x'"""
+        if level == 0:
+            self.levels = []  # Since self.levels is acting as a global, lets not reuse last run
+        levels = self.levels
+        node = root
+        if node:
+            self.inOrderWalk(node.left, level+1)
+            self.levels.append([level, node.key])
+            self.inOrderWalk(node.right, level+1)
+            
+        if level == 0:  # Only printLevels if recursion has unwrapped
+            self._printLevels()
+            
+    def _printLevels(self):
+        """Used by inOrder() so visualize tree"""
+        
+        def __findMaxLevel(levels):
+            maxLevel = 0
+            for node in levels:
+                if node[0] > maxLevel:
+                    maxLevel = node[0]
+            return maxLevel
+                    
+        def __sortByLevel(levels):
+            return sorted(levels, key=lambda l: l[0])
+        
+        levels = self.levels
+        maxLevel = __findMaxLevel(levels) 
+        levels = __sortByLevel(levels)
+        
+        print "-----"
+        for i in range(maxLevel+1):
+            values = [x[1] for x in levels if x[0] == i]  # Group all nodes at ith level
+            print "Level {}: {}".format(i, values)
+            
+    def findParent(self, key):
+        node = self.root
+        parent = self.root
+        while(node.key != key):
+            if key < node.key:
+                node = node.left
+            else:
+                node = node.right
+        return parent
+        
+    def rrRotate(self, k2):
+        """
+            k2             k1
+           /  \           /  \
+          k1   Z   -->   X    k2
+         /  \                /  \
+        X    Y              Y    Z
+        """
+        k1 = k2.left
+        k2.left = k1.right
+        k1.right = k2
+        return k1
+    
+    def llRotate(self, k2):
+        """
+            k2                k1
+           /  \              /  \
+          X    k1    -->    k2    Z
+              /  \         /  \
+             Y    Z       X    Y
+        """
+        k1 = k2.right
+        k2.right = k1.left
+        k1.left = k2
+        return k1
+    
     def insert(self, key):
-        if (self.root == None):
+        if (self.root is None):  # Empty tree
             self.root = Node(key)
             return
 
-        self.splay(key)
+        # Check if key is already in the tree
+        self.splay(key) 
         if self.root.key == key:
-            # If the key is already there in the tree, don't do anything.
             return
 
-        n = Node(key)
+        newNode = Node(key)
         if key < self.root.key:
-            n.left = self.root.left
-            n.right = self.root
+            newNode.left = self.root.left
+            newNode.right = self.root
             self.root.left = None
+            self.root = newNode
         else:
-            n.right = self.root.right
-            n.left = self.root
+            newNode.right = self.root.right
+            newNode.left = self.root
             self.root.right = None
-        self.root = n
+            self.root = newNode
 
-    def remove(self, key):
-        self.splay(key)
+    def delete(self, key):
+        self.splay(key)  
+        
         if key != self.root.key:
-            raise ValueError("Key not found")
+            print "Key not found in tree..."
 
-        # Now delete the root.
-        if self.root.left== None:
+        # Delete the root
+        if self.root.left is None:
             self.root = self.root.right
         else:
             x = self.root.right
@@ -75,7 +133,7 @@ class SplayTree:
             self.root.right = x
 
     def find(self, key):
-        if self.root == None:
+        if self.isEmpty():
             return None
         self.splay(key)
         if self.root.key != key:
@@ -83,55 +141,57 @@ class SplayTree:
         return self.root.key
 
     def isEmpty(self):
-        return self.root == None
+        if self.root is None:
+            return True
+        return False
     
     def splay(self, key):
-        l = r = self.header
-        t = self.root
+        leftTreeMax = rightTreeMin = self.header
+        root = self.root
         self.header.left = self.header.right = None
         while True:
-            if key < t.key:
-                if t.left == None:
+            if key < root.key:
+                if root.left is None:
                     break
-                if key < t.left.key:
-                    y = t.left
-                    t.left = y.right
-                    y.right = t
-                    t = y
-                    if t.left == None:
+                if key < root.left.key:
+                    root = self.rrRotate(root)
+                    if root.left == None:
                         break
-                r.left = t
-                r = t
-                t = t.left
-            elif key > t.key:
-                if t.right == None:
+                rightTreeMin.left = root  
+                rightTreeMin = root
+                root = root.left
+            elif key > root.key:
+                if root.right is None:
                     break
-                if key > t.right.key:
-                    y = t.right
-                    t.right = y.left
-                    y.left = t
-                    t = y
-                    if t.right == None:
+                if key > root.right.key:
+                    #root = self.llRotate(root)
+                    if root.right is None:
                         break
-                l.right = t
-                l = t
-                t = t.right
+                leftTreeMax.right = root
+                leftTreeMax = root
+                root = root.right
             else:
                 break
-        l.right = t.left
-        r.left = t.right
-        t.left = self.header.right
-        t.right = self.header.left
-        self.root = t
+        leftTreeMax.right = root.left
+        rightTreeMin.left = root.right
+        root.left = self.header.right
+        root.right = self.header.left
+        self.root = root
                 
 if __name__ == "__main__":
     tree = SplayTree()    
-    for i in range(10001):
-        tree.insert(i)
-        
-    #inOrder(tree.root)
-    #printLevels()
-    levels = []
+    
+    tree.insert(1)
+    tree.insert(2)
+    tree.insert(3)
+    tree.insert(4)
+    tree.inOrderWalk(tree.root)
+    
+    tree.find(1)
+    tree.inOrderWalk(tree.root)
+    
+    tree.find(4)
+    tree.inOrderWalk(tree.root)
     
         
         
