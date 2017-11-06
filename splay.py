@@ -211,12 +211,8 @@ class SplayTree(object):
                     maxLevel = node[0]
             return maxLevel
                     
-        def _sortByLevel(levels):
-            return sorted(levels, key=lambda l: l[0])
-        
         levels = self.levels
         maxLevel = _findMaxLevel(levels) 
-        levels = _sortByLevel(levels)
         
         print "-----"
         for i in range(maxLevel+1):
