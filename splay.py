@@ -35,7 +35,7 @@ class SplayTree(object):
         """ Uses technique found on https://en.wikipedia.org/wiki/Splay_tree#Deletion:
         - The node to be deleted is splayed, and then deleted. This creates two sub-trees
         - The two sub-trees are then joined using a join() operation """
-        node = self.findParent(key)
+        node = self.findParentNodeOfKey(key)
         if key < node.key:
             node = node.left
         else:
@@ -67,8 +67,7 @@ class SplayTree(object):
         return node
             
     def find(self, node, key):
-        """Recursively look through subtrees until key is found, then splay key to top.
-        If no key is found, return None"""
+        """Recursively look through subtrees until key is found, then splay key to top"""
         if key == self.root.key or node is None: 
             return
         
@@ -88,8 +87,8 @@ class SplayTree(object):
                 self.splay(node)
 
     def splay(self, node):
-        p = self.findParent(node.key)
-        g = self.findParent(p.key)
+        p = self.findParentNodeOfKey(node.key)
+        g = self.findParentNodeOfKey(p.key)
         
         if node.key == self.root.key:
             return
@@ -104,7 +103,7 @@ class SplayTree(object):
             self.root = node
             self.splay(node)
             
-        r = self.findParent(g.key)
+        r = self.findParentNodeOfKey(g.key)
         
         if node.key < p.key < g.key:  # Zig Zig Left
             g.left = p.right
@@ -166,7 +165,8 @@ class SplayTree(object):
             self.splay(node)
             return
         
-    def findParent(self, key):
+    def findParentNodeOfKey(self, key):
+        """Find parent node of a key"""
         node = self.root
         parent = self.root
         while(node.key != key):
@@ -187,7 +187,7 @@ class SplayTree(object):
         """Walk the tree in order(L - Root - R), updates class variable
         self.levels which is a 2D array of all the nodes and their (Level, Key)
         
-        - Particular to the assignment, 'level' is synonymous with 'Size, S(x)',
+        - Particular to the assignment, 'level' synonymous with 'Size, S(x)',
         AKA 'the number of nodes in the subtree rooted at x'"""
         if level == 0:
             root = self.root
@@ -223,16 +223,9 @@ class SplayTree(object):
 if __name__ == "__main__":
     tree = SplayTree()    
     
-    for i in range(1, 10):
+    for i in range(1, 100000):
         tree.insert(tree.root, i)
     
     tree.inOrderWalk(tree.root)
     
-    tree.find(tree.root, 2)
-    tree.inOrderWalk()
-    tree.find(tree.root, 4)
-    tree.inOrderWalk()
-    
-        
-        
         
