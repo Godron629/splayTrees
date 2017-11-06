@@ -30,7 +30,7 @@ class SplayTree(object):
             else:
                 insert(node.right, key) 
         return node
-
+        
     def delete(self, key):
         """ Uses technique found on https://en.wikipedia.org/wiki/Splay_tree#Deletion:
         - The node to be deleted is splayed, and then deleted. This creates two sub-trees
@@ -183,20 +183,20 @@ class SplayTree(object):
             return -1
         return max(self.height(node.left), self.height(node.right)) + 1
         
-    def inOrderWalk(self, root, level=0):
+    def inOrderWalk(self, root=None, level=0):
         """Walk the tree in order(L - Root - R), updates class variable
         self.levels which is a 2D array of all the nodes and their (Level, Key)
         
         - Particular to the assignment, 'level' is synonymous with 'Size, S(x)',
         AKA 'the number of nodes in the subtree rooted at x'"""
         if level == 0:
+            root = self.root
             self.levels = []  # Since self.levels is acting as a global, lets not reuse last run
-        levels = self.levels
-        node = root
-        if node:
-            self.inOrderWalk(node.left, level+1)
-            self.levels.append([level, node.key])
-            self.inOrderWalk(node.right, level+1)
+            
+        if root:
+            self.inOrderWalk(root.left, level+1)
+            self.levels.append([level, root.key])
+            self.inOrderWalk(root.right, level+1)
             
         if level == 0:  # Only printLevels if recursion has unwrapped
             self.printLevels()
@@ -233,9 +233,9 @@ if __name__ == "__main__":
     tree.inOrderWalk(tree.root)
     
     tree.find(tree.root, 2)
-    tree.inOrderWalk(tree.root)
+    tree.inOrderWalk()
     tree.find(tree.root, 4)
-    tree.inOrderWalk(tree.root)
+    tree.inOrderWalk()
     
         
         
