@@ -14,8 +14,8 @@ class SplayTree(object):
         
     def insert(self, key, node=-1):
         """Recursively look through left or right subtree until correct spot is found
-        - if node == -1 check is so that I don't have to pass the root node into the function
-        on first call, as the node paramater is used to recurse"""
+        - Check (if node == -1) so that we don't have to pass self.root into the function
+        on a non-recursive call"""
         if node == -1:
             node = self.root
             
@@ -29,14 +29,14 @@ class SplayTree(object):
                 self.splay(node.left)
                 return
             else:
-                insert(node.left, key)  # Continue down the left subtree
+                insert(key, node.left)  # Continue down the left subtree
         if key > node.key:
             if node.right is None:
                 node.right = Node(key)
                 self.splay(node.right)
                 return
             else:
-                insert(node.right, key) 
+                insert(key, node.right) 
         return node
         
     def delete(self, key):
@@ -74,8 +74,13 @@ class SplayTree(object):
             node = node.right
         return node
             
-    def find(self, node, key):
-        """Recursively look through subtrees until key is found, then splay key to top"""
+    def find(self, key, node=-1):
+        """Recursively look through subtrees until key is found, then splay key to top
+        - Check (if node == -1) so that we don't have to pass self.root as a param in a
+        non-recursive call"""
+        if node == -1:
+            node = self.root
+        
         if key == self.root.key or node is None: 
             return
         
@@ -85,12 +90,12 @@ class SplayTree(object):
         
         if key < node.key:
             if node.left is not None:
-                self.find(node.left, key)
+                self.find(key, node.left)
             else:
                 self.splay(node)
         else:
             if node.right is not None:
-                self.find(node.right, key)
+                self.find(key, node.right)
             else:
                 self.splay(node)
 
@@ -231,10 +236,15 @@ class SplayTree(object):
 if __name__ == "__main__":
     tree = SplayTree()    
     
-    for i in range(1, 5001):
+    for i in range(1, 10):
         tree.insert(i)
     
     tree.inOrderWalk(tree.root)
+    
+    tree.find(5)
+    tree.inOrderWalk()
+    
+    
     
     
     
