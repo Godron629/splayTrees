@@ -196,13 +196,15 @@ class SplayTree(object):
                 node = node.right
         return parent
             
-    def height(self, node):
+    def recursiveheight(self, node):
         """Return the height of a node"""
         if node is None:
             return -1
         return max(self.height(node.left), self.height(node.right)) + 1
     
-    def iterHeight(self, root):
+    def iterativeHeight(self, root):
+        """Compute the height of a node, iterative because I kept blowing the stack with recursion
+        with trees above 10,000 nodes"""
         if root is None:
             return 0
         q = []
@@ -270,5 +272,5 @@ if __name__ == "__main__":
     for i in x:
         tree.insert(i)
         
-    print tree.iterHeight(tree.root)    
+    print tree.iterativeHeight(tree.root)    
     
