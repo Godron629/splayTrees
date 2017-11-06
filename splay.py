@@ -9,82 +9,26 @@ class SplayTree(object):
         self.root = root
         self.levels = []
         
-    def height(self, node):
-        """Return the height of a node"""
-        if node is None:
-            return -1
-        return max(self.height(node.left), self.height(node.right)) + 1
-        
-    def inOrderWalk(self, root, level=0):
-        """Walk the tree in order(L - Root - R), updates class variable
-        self.levels which is a 2D array of all the nodes and their (Level, Key)
-        
-        - Particular to the assignment, 'level' is synonymous with 'Size, S(x)',
-        AKA 'the number of nodes in the subtree rooted at x'"""
-        if level == 0:
-            self.levels = []  # Since self.levels is acting as a global, lets not reuse last run
-        levels = self.levels
-        node = root
-        if node:
-            self.inOrderWalk(node.left, level+1)
-            self.levels.append([level, node.key])
-            self.inOrderWalk(node.right, level+1)
-            
-        if level == 0:  # Only printLevels if recursion has unwrapped
-            self.printLevels()
-            
-    def printLevels(self):
-        """Used by inOrder() so visualize tree"""
-        
-        def _findMaxLevel(levels):
-            maxLevel = 0
-            for node in levels:
-                if node[0] > maxLevel:
-                    maxLevel = node[0]
-            return maxLevel
-                    
-        def _sortByLevel(levels):
-            return sorted(levels, key=lambda l: l[0])
-        
-        levels = self.levels
-        maxLevel = _findMaxLevel(levels) 
-        levels = _sortByLevel(levels)
-        
-        print "-----"
-        for i in range(maxLevel+1):
-            values = [x[1] for x in levels if x[0] == i]  # Group all nodes at ith level
-            print "Level {}: {}".format(i, values)
-            
-    def findParent(self, key):
-        node = self.root
-        parent = self.root
-        while(node.key != key):
-            parent = node
-            if key < node.key:
-                node = node.left
-            else:
-                node = node.right
-        return parent
-        
     def insert(self, node, key):
+        """Recursively look through left or right subtree until correct spot is found"""
         if node is None:
             self.root = Node(key)
             return
             
         if key < node.key:
-            if node.left is None:
+            if node.left is None:  # Found the keys' proper place
                 node.left = Node(key)
                 self.splay(node.left)
                 return
             else:
-                insert(node.left, key)
+                insert(node.left, key)  # Continue down the left subtree
         if key > node.key:
             if node.right is None:
                 node.right = Node(key)
                 self.splay(node.right)
                 return
             else:
-                insert(node.right, key)
+                insert(node.right, key) 
         return node
 
     def delete(self, key):
@@ -113,6 +57,8 @@ class SplayTree(object):
         self.root.right = rSub.root
         
     def getLargest(self):
+        """Return the largest node of tree
+        - To get the largest node of a subtree, make a new Subtree() and call this"""
         node = self.root
         if node.right is None:
             return node
@@ -121,26 +67,26 @@ class SplayTree(object):
         return node
             
     def find(self, node, key):
-        if key == self.root.key or node is None:
+        """Recursively look through subtrees until key is found, then splay key to top.
+        If no key is found, return None"""
+        if key == self.root.key or node is None: 
             return
+        
         if key == node.key:
             self.splay(node)
             return
+        
         if key < node.key:
             if node.left is not None:
                 self.find(node.left, key)
-            else: self.splay(node)
+            else:
+                self.splay(node)
         else:
             if node.right is not None:
                 self.find(node.right, key)
             else:
                 self.splay(node)
 
-    def isEmpty(self):
-        if self.root is None:
-            return True
-        return False
-    
     def splay(self, node):
         p = self.findParent(node.key)
         g = self.findParent(p.key)
@@ -219,7 +165,63 @@ class SplayTree(object):
                     r.right = node
             self.splay(node)
             return
+        
+    def findParent(self, key):
+        node = self.root
+        parent = self.root
+        while(node.key != key):
+            parent = node
+            if key < node.key:
+                node = node.left
+            else:
+                node = node.right
+        return parent
             
+    def height(self, node):
+        """Return the height of a node"""
+        if node is None:
+            return -1
+        return max(self.height(node.left), self.height(node.right)) + 1
+        
+    def inOrderWalk(self, root, level=0):
+        """Walk the tree in order(L - Root - R), updates class variable
+        self.levels which is a 2D array of all the nodes and their (Level, Key)
+        
+        - Particular to the assignment, 'level' is synonymous with 'Size, S(x)',
+        AKA 'the number of nodes in the subtree rooted at x'"""
+        if level == 0:
+            self.levels = []  # Since self.levels is acting as a global, lets not reuse last run
+        levels = self.levels
+        node = root
+        if node:
+            self.inOrderWalk(node.left, level+1)
+            self.levels.append([level, node.key])
+            self.inOrderWalk(node.right, level+1)
+            
+        if level == 0:  # Only printLevels if recursion has unwrapped
+            self.printLevels()
+            
+    def printLevels(self):
+        """Used by inOrder() so visualize tree"""
+        
+        def _findMaxLevel(levels):
+            maxLevel = 0
+            for node in levels:
+                if node[0] > maxLevel:
+                    maxLevel = node[0]
+            return maxLevel
+                    
+        def _sortByLevel(levels):
+            return sorted(levels, key=lambda l: l[0])
+        
+        levels = self.levels
+        maxLevel = _findMaxLevel(levels) 
+        levels = _sortByLevel(levels)
+        
+        print "-----"
+        for i in range(maxLevel+1):
+            values = [x[1] for x in levels if x[0] == i]  # Group all nodes at ith level
+            print "Level {}: {}".format(i, values)
             
                 
 if __name__ == "__main__":
