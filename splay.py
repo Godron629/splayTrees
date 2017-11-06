@@ -1,5 +1,3 @@
-from copy import deepcopy
-
 class Node:
     def __init__(self, key):
         self.key = key
@@ -9,15 +7,13 @@ class Node:
 class SplayTree:
     def __init__(self):
         self.root = None
-        self.header = Node(None)
         self.levels = []
         
-    @classmethod
-    def height(node):
+    def height(self, node):
         """Return the height of a node"""
         if node is None:
             return -1
-        return max(height(node.left), height(node.right)) + 1
+        return max(self.height(node.left), self.height(node.right)) + 1
         
     def inOrderWalk(self, root, level=0):
         """Walk the tree in order(L - Root - R), updates class variable
@@ -35,24 +31,24 @@ class SplayTree:
             self.inOrderWalk(node.right, level+1)
             
         if level == 0:  # Only printLevels if recursion has unwrapped
-            self._printLevels()
+            self.printLevels()
             
-    def _printLevels(self):
+    def printLevels(self):
         """Used by inOrder() so visualize tree"""
         
-        def __findMaxLevel(levels):
+        def _findMaxLevel(levels):
             maxLevel = 0
             for node in levels:
                 if node[0] > maxLevel:
                     maxLevel = node[0]
             return maxLevel
                     
-        def __sortByLevel(levels):
+        def _sortByLevel(levels):
             return sorted(levels, key=lambda l: l[0])
         
         levels = self.levels
-        maxLevel = __findMaxLevel(levels) 
-        levels = __sortByLevel(levels)
+        maxLevel = _findMaxLevel(levels) 
+        levels = _sortByLevel(levels)
         
         print "-----"
         for i in range(maxLevel+1):
@@ -63,134 +59,179 @@ class SplayTree:
         node = self.root
         parent = self.root
         while(node.key != key):
+            parent = node
             if key < node.key:
                 node = node.left
             else:
                 node = node.right
         return parent
         
-    def rrRotate(self, k2):
-        """
-            k2             k1
-           /  \           /  \
-          k1   Z   -->   X    k2
-         /  \                /  \
-        X    Y              Y    Z
-        """
-        k1 = k2.left
-        k2.left = k1.right
-        k1.right = k2
-        return k1
-    
-    def llRotate(self, k2):
-        """
-            k2                k1
-           /  \              /  \
-          X    k1    -->    k2    Z
-              /  \         /  \
-             Y    Z       X    Y
-        """
-        k1 = k2.right
-        k2.right = k1.left
-        k1.left = k2
-        return k1
-    
-    def insert(self, key):
-        if (self.root is None):  # Empty tree
+    def insert(self, node, key):
+        if node is None:
             self.root = Node(key)
             return
-
-        # Check if key is already in the tree
-        self.splay(key) 
-        if self.root.key == key:
-            return
-
-        newNode = Node(key)
-        if key < self.root.key:
-            newNode.left = self.root.left
-            newNode.right = self.root
-            self.root.left = None
-            self.root = newNode
-        else:
-            newNode.right = self.root.right
-            newNode.left = self.root
-            self.root.right = None
-            self.root = newNode
+            
+        if key < node.key:
+            if node.left is None:
+                node.left = Node(key)
+                self.splay(node.left)
+                return
+            else:
+                insert(node.left, key)
+        if key > node.key:
+            if node.right is None:
+                node.right = Node(key)
+                self.splay(node.right)
+                return
+            else:
+                insert(node.right, key)
+        return node
 
     def delete(self, key):
-        self.splay(key)  
-        
-        if key != self.root.key:
-            print "Key not found in tree..."
-
-        # Delete the root
-        if self.root.left is None:
+        self.find(self.root, key)
+        if self.root.left is None and self.root.right is not None and self.root.right.left is None:
             self.root = self.root.right
-        else:
-            x = self.root.right
+        if self.root.right is None and self.root.left is not None and self.root.left.right is None:
             self.root = self.root.left
-            self.splay(key)
-            self.root.right = x
-
-    def find(self, key):
-        if self.isEmpty():
-            return None
-        self.splay(key)
-        if self.root.key != key:
-            return None
-        return self.root.key
+        if self.root.key == key and self.root.left is not None:
+            node = self.root.left
+            while(node.right is not None):
+                node = node.right
+            parent = self.findParent(node.key)
+            node.right = parent.right
+            self.root = node  #????? Make this work!
+            #parent.right = node.left
+            #self.root.key = node.key
+            return
+        if self.root.key == key and self.root.right is not None:
+            node = self.root.right
+            while(node.left is not None):
+                node = node.left
+            parent = self.findParent(node.key)
+            parent.left = node.right
+            self.root.key = node.key
+            return
+        if self.root.key == key:
+            self.root = None
+        else:
+            return
+                
+            
+    def find(self, node, key):
+        if key == self.root.key or node is None:
+            return
+        if key == node.key:
+            self.splay(node)
+            return
+        if key < node.key:
+            if node.left is not None:
+                self.find(node.left, key)
+            else: self.splay(node)
+        else:
+            if node.right is not None:
+                self.find(node.right, key)
+            else:
+                self.splay(node)
 
     def isEmpty(self):
         if self.root is None:
             return True
         return False
     
-    def splay(self, key):
-        leftTreeMax = rightTreeMin = self.header
-        root = self.root
-        self.header.left = self.header.right = None
-        while True:
-            if key < root.key:
-                if root.left is None:
-                    break
-                if key < root.left.key:
-                    root = self.rrRotate(root)
-                    if root.left == None:
-                        break
-                rightTreeMin.left = root  
-                rightTreeMin = root
-                root = root.left
-            elif key > root.key:
-                if root.right is None:
-                    break
-                if key > root.right.key:
-                    #root = self.llRotate(root)
-                    if root.right is None:
-                        break
-                leftTreeMax.right = root
-                leftTreeMax = root
-                root = root.right
+    def splay(self, node):
+        p = self.findParent(node.key)
+        g = self.findParent(p.key)
+        
+        if node.key == self.root.key:
+            return
+        
+        if p.key == g.key and p.key != node.key:  # Simple Rotation
+            if node.key < p.key:
+                p.left = node.right
+                node.right = p
+            if node.key > p.key:
+                p.right = node.left
+                node.left = p
+            self.root = node
+            self.splay(node)
+            
+        r = self.findParent(g.key)
+        
+        if node.key < p.key < g.key:  # Zig Zig Left
+            g.left = p.right
+            p.left = node.right
+            p.right = g
+            node.right = p
+            if g.key == self.root.key:
+                self.root = node
             else:
-                break
-        leftTreeMax.right = root.left
-        rightTreeMin.left = root.right
-        root.left = self.header.right
-        root.right = self.header.left
-        self.root = root
+                if r.key > node.key:
+                    r.left = node
+                else:
+                    r.right = node
+            self.splay(node)
+            return
+        
+        if node.key > p.key > g.key:  # Zig Zig Right
+            g.right = p.left
+            p.right = node.left
+            p.left = g
+            node.left = p
+            if g.key == self.root.key:
+                self.root = node
+            else:
+                if r.data > node.data:
+                    r.left = node
+                else:
+                    r.right = node
+            self.splay(node)
+            return
+        
+        if p.key < node.key < g.key:  # Zig Zag 
+            p.right = node.left
+            g.left = node.right
+            node.left = p
+            node.right = g
+            if g.key == self.root.key:
+                self.root = node
+            else:
+                if r.key > node.key:
+                    r.left = node
+                else:
+                    r.right = node
+            self.splay(node)
+            return
+                
+        if p.key > node.key > g.key:  # Zig Zag
+            p.left = node.right
+            g.right = node.left
+            node.right = p
+            node.left = g
+            if g.key == self.root.key:
+                self.root = node
+            else:
+                if r.key > node.key:
+                    r.left = node
+                else:
+                    r.right = node
+            self.splay(node)
+            return
+            
+            
                 
 if __name__ == "__main__":
     tree = SplayTree()    
     
-    tree.insert(1)
-    tree.insert(2)
-    tree.insert(3)
-    tree.insert(4)
-    tree.inOrderWalk(tree.root)
+    tree.insert(tree.root, 1)
+    tree.insert(tree.root, 2)
+    tree.insert(tree.root, 3)
+    tree.insert(tree.root, 4)
+    tree.insert(tree.root, 8)
+    tree.insert(tree.root, 9)
     
-    tree.find(1)
+    tree.delete(2)
     tree.inOrderWalk(tree.root)
-    
-    tree.find(4)
+    tree.delete(4)
     tree.inOrderWalk(tree.root)
     
         
