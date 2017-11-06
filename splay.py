@@ -1,3 +1,6 @@
+import sys
+sys.setrecursionlimit(15000)
+
 class Node:
     def __init__(self, key):
         self.key = key
@@ -9,8 +12,13 @@ class SplayTree(object):
         self.root = root
         self.levels = []
         
-    def insert(self, node, key):
-        """Recursively look through left or right subtree until correct spot is found"""
+    def insert(self, key, node=-1):
+        """Recursively look through left or right subtree until correct spot is found
+        - if node == -1 check is so that I don't have to pass the root node into the function
+        on first call, as the node paramater is used to recurse"""
+        if node == -1:
+            node = self.root
+            
         if node is None:
             self.root = Node(key)
             return
@@ -223,9 +231,11 @@ class SplayTree(object):
 if __name__ == "__main__":
     tree = SplayTree()    
     
-    for i in range(1, 100000):
-        tree.insert(tree.root, i)
+    for i in range(1, 5001):
+        tree.insert(i)
     
     tree.inOrderWalk(tree.root)
+    
+    
     
         
