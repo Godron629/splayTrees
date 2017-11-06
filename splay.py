@@ -4,9 +4,9 @@ class Node:
         self.left = None
         self.right = None
 
-class SplayTree:
-    def __init__(self):
-        self.root = None
+class SplayTree(object):
+    def __init__(self, root=None):
+        self.root = root
         self.levels = []
         
     def height(self, node):
@@ -88,34 +88,37 @@ class SplayTree:
         return node
 
     def delete(self, key):
-        self.find(self.root, key)
-        if self.root.left is None and self.root.right is not None and self.root.right.left is None:
-            self.root = self.root.right
-        if self.root.right is None and self.root.left is not None and self.root.left.right is None:
-            self.root = self.root.left
-        if self.root.key == key and self.root.left is not None:
-            node = self.root.left
-            while(node.right is not None):
-                node = node.right
-            parent = self.findParent(node.key)
-            node.right = parent.right
-            self.root = node  #????? Make this work!
-            #parent.right = node.left
-            #self.root.key = node.key
-            return
-        if self.root.key == key and self.root.right is not None:
-            node = self.root.right
-            while(node.left is not None):
-                node = node.left
-            parent = self.findParent(node.key)
-            parent.left = node.right
-            self.root.key = node.key
-            return
-        if self.root.key == key:
-            self.root = None
+        """ Uses technique found on https://en.wikipedia.org/wiki/Splay_tree#Deletion:
+        - The node to be deleted is splayed, and then deleted. This creates two sub-trees
+        - The two sub-trees are then joined using a join() operation """
+        node = self.findParent(key)
+        if key < node.key:
+            node = node.left
         else:
-            return
-                
+            node = node.right
+            
+        self.splay(node)
+        
+        lSub = SplayTree(self.root.left)
+        rSub = SplayTree(self.root.right)
+        
+        self.root = None
+        self.join(lSub, rSub)
+        
+    def join(self, lSub, rSub):
+        """Splay the largest key in the left subtree, then make rSub the right child of lSub"""
+        largest = lSub.getLargest()
+        lSub.splay(largest)
+        self.root = largest
+        self.root.right = rSub.root
+        
+    def getLargest(self):
+        node = self.root
+        if node.right is None:
+            return node
+        while(node.right is not None):
+            node = node.right
+        return node
             
     def find(self, node, key):
         if key == self.root.key or node is None:
@@ -187,7 +190,7 @@ class SplayTree:
             self.splay(node)
             return
         
-        if p.key < node.key < g.key:  # Zig Zag 
+        if p.key < node.key < g.key:  # RL Zig Zag 
             p.right = node.left
             g.left = node.right
             node.left = p
@@ -202,7 +205,7 @@ class SplayTree:
             self.splay(node)
             return
                 
-        if p.key > node.key > g.key:  # Zig Zag
+        if p.key > node.key > g.key:  # LR Zig Zag
             p.left = node.right
             g.right = node.left
             node.right = p
@@ -222,16 +225,14 @@ class SplayTree:
 if __name__ == "__main__":
     tree = SplayTree()    
     
-    tree.insert(tree.root, 1)
-    tree.insert(tree.root, 2)
-    tree.insert(tree.root, 3)
-    tree.insert(tree.root, 4)
-    tree.insert(tree.root, 8)
-    tree.insert(tree.root, 9)
+    for i in range(1, 10):
+        tree.insert(tree.root, i)
     
-    tree.delete(2)
     tree.inOrderWalk(tree.root)
-    tree.delete(4)
+    
+    tree.find(tree.root, 2)
+    tree.inOrderWalk(tree.root)
+    tree.find(tree.root, 4)
     tree.inOrderWalk(tree.root)
     
         
