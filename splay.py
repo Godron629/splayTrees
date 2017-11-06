@@ -1,5 +1,4 @@
-import sys
-sys.setrecursionlimit(15000)
+from random import shuffle
 
 class Node:
     def __init__(self, key):
@@ -29,14 +28,14 @@ class SplayTree(object):
                 self.splay(node.left)
                 return
             else:
-                insert(key, node.left)  # Continue down the left subtree
+                self.insert(key, node.left)  # Continue down the left subtree
         if key > node.key:
             if node.right is None:
                 node.right = Node(key)
                 self.splay(node.right)
                 return
             else:
-                insert(key, node.right) 
+                self.insert(key, node.right) 
         return node
         
     def delete(self, key):
@@ -148,7 +147,7 @@ class SplayTree(object):
             if g.key == self.root.key:
                 self.root = node
             else:
-                if r.data > node.data:
+                if r.key > node.key:
                     r.left = node
                 else:
                     r.right = node
@@ -202,7 +201,28 @@ class SplayTree(object):
         if node is None:
             return -1
         return max(self.height(node.left), self.height(node.right)) + 1
+    
+    def iterHeight(self, root):
+        if root is None:
+            return 0
+        q = []
+        q.append(root)
+        height = 0
         
+        while(True):
+            nodeCount = len(q)
+            if nodeCount == 0:
+                return height
+            height += 1
+            while(nodeCount > 0):
+                node = q[0]
+                q.pop(0)
+                if node.left is not None:
+                    q.append(node.left)
+                if node.right is not None:
+                    q.append(node.right)
+                nodeCount -= 1
+    
     def inOrderWalk(self, root=None, level=0):
         """Walk the tree in order(L - Root - R), updates class variable
         self.levels which is a 2D array of all the nodes and their (Level, Key)
@@ -243,4 +263,12 @@ class SplayTree(object):
 if __name__ == "__main__":
     tree = SplayTree()    
     
+                
+    x = range(1, 100001)
+    shuffle(x)
+    
+    for i in x:
+        tree.insert(i)
         
+    print tree.iterHeight(tree.root)    
+    
