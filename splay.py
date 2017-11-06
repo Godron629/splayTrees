@@ -44,10 +44,13 @@ class SplayTree(object):
         - The node to be deleted is splayed, and then deleted. This creates two sub-trees
         - The two sub-trees are then joined using a join() operation """
         node = self.findParentNodeOfKey(key)
+        
         if key < node.key:
             node = node.left
-        else:
+        elif key > node.key:
             node = node.right
+        else:
+            pass
             
         self.splay(node)
         
@@ -242,6 +245,15 @@ if __name__ == "__main__":
     tree.inOrderWalk(tree.root)
     
     tree.find(5)
+    tree.inOrderWalk()
+    
+    tree.find(2)
+    tree.inOrderWalk()
+    
+    tree.delete(4)
+    tree.inOrderWalk()
+    
+    tree.delete(3)
     tree.inOrderWalk()
     
     
