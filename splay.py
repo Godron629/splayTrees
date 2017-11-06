@@ -43,6 +43,10 @@ class SplayTree(object):
         """ Uses technique found on https://en.wikipedia.org/wiki/Splay_tree#Deletion:
         - The node to be deleted is splayed, and then deleted. This creates two sub-trees
         - The two sub-trees are then joined using a join() operation """
+        if self.root.left is None and self.root.right is None:
+            self.root = None
+            return
+        
         node = self.findParentNodeOfKey(key)
         
         if key < node.key:
@@ -238,26 +242,5 @@ class SplayTree(object):
                 
 if __name__ == "__main__":
     tree = SplayTree()    
-    
-    for i in range(1, 10):
-        tree.insert(i)
-    
-    tree.inOrderWalk(tree.root)
-    
-    tree.find(5)
-    tree.inOrderWalk()
-    
-    tree.find(2)
-    tree.inOrderWalk()
-    
-    tree.delete(4)
-    tree.inOrderWalk()
-    
-    tree.delete(3)
-    tree.inOrderWalk()
-    
-    
-    
-    
     
         
