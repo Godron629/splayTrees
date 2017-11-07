@@ -1,6 +1,8 @@
 from random import shuffle
 from math import log
 
+import matplotlib.pyplot as plt
+
 def simpleCalc(x1, x2, p1, p2):
     first = 1 + x2 - x1 + p2 - p1
     second = 3 * (x2 - x1)
@@ -376,5 +378,13 @@ if __name__ == "__main__":
     print "ZigZag Sum 3x Sum: {}".format(sum(zigzag3x))
     
     print "Compare: {}".format(1 + 3*log(100001, 2))
+    
+    plt.plot(zigzig3x)
+    plt.plot(zigzag3x)
+    plt.plot(simple3x)
+    
+    plt.legend(["zigzigFirst", "zigzagFirst", "simpleFirst"], loc="upper left")
+    
+    plt.show()
     
         
