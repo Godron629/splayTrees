@@ -1,4 +1,16 @@
 from random import shuffle
+from math import log
+
+def simpleCalc(x1, x2, p1, p2):
+    first = 1 + x2 - x1 + p2 - p1
+    second = 3 * (x2 - x1)
+    return [first, second]
+
+def zigOrZagCalc(x1, x2, p1, p2, g1, g2):
+    first = 2 + x2 - x1 + p2 - p1 + g2 - g1
+    second = 3 * (x2 - x1)
+    return [first, second]
+
 
 class Node:
     def __init__(self, key):
@@ -10,6 +22,10 @@ class SplayTree(object):
     def __init__(self, root=None):
         self.root = root
         self.levels = []
+        self.trackRotations = False
+        self.simpleRanks = []  # [[1+x2-x1+p2-p1],[3(x2-x1)]]
+        self.zigzigRanks = []
+        self.zigzagRanks = []
         
     def insert(self, key, node=-1):
         """Recursively look through left or right subtree until correct spot is found
@@ -112,7 +128,11 @@ class SplayTree(object):
         if node.key == self.root.key:
             return
         
-        if p.key == g.key and p.key != node.key:  # Simple Rotation
+        # Simple Rotation
+        if p.key == g.key and p.key != node.key:  
+            if self.trackRotations:  # For assignment
+                p1 , x1 = self.getRanksForPlot(p, g, node, "simple")
+                
             if node.key < p.key:
                 p.left = node.right
                 node.right = p
@@ -120,11 +140,20 @@ class SplayTree(object):
                 p.right = node.left
                 node.left = p
             self.root = node
+            
+            if self.trackRotations: # For assignment
+                p2, x2 = self.getRanksForPlot(p, g, node, "simple")
+                self.simpleRanks.append(simpleCalc(x1, x2, p1, p2))
+                
             self.splay(node)
             
         r = self.findParentNodeOfKey(g.key)
         
-        if node.key < p.key < g.key:  # Zig Zig Left
+        # Zig Zig Left
+        if node.key < p.key < g.key: 
+            if self.trackRotations:
+                p1, x1, g1 = self.getRanksForPlot(p, g, node, "zigzig")
+                
             g.left = p.right
             p.left = node.right
             p.right = g
@@ -136,10 +165,19 @@ class SplayTree(object):
                     r.left = node
                 else:
                     r.right = node
+            
+            if self.trackRotations:
+                p2, x2, g2 = self.getRanksForPlot(p, g, node, "zigzig")
+                self.zigzigRanks.append(zigOrZagCalc(x1, x2, p1, p2, g1, g2))
+                
             self.splay(node)
             return
         
-        if node.key > p.key > g.key:  # Zig Zig Right
+        # Zig Zig Right
+        if node.key > p.key > g.key: 
+            if self.trackRotations:
+                p1, x1, g1 = self.getRanksForPlot(p, g, node, "zigzig")
+                
             g.right = p.left
             p.right = node.left
             p.left = g
@@ -151,10 +189,18 @@ class SplayTree(object):
                     r.left = node
                 else:
                     r.right = node
+                    
+            if self.trackRotations:
+                p2, x2, g2 = self.getRanksForPlot(p, g, node, "zigzig")
+                self.zigzigRanks.append(zigOrZagCalc(x1, x2, p1, p2, g1, g2))
+                
             self.splay(node)
             return
         
         if p.key < node.key < g.key:  # RL Zig Zag 
+            if self.trackRotations:
+                p1, x1, g1 = self.getRanksForPlot(p, g, node, "zigzag")
+                
             p.right = node.left
             g.left = node.right
             node.left = p
@@ -166,10 +212,18 @@ class SplayTree(object):
                     r.left = node
                 else:
                     r.right = node
+                    
+            if self.trackRotations:
+                p2, x2, g2 = self.getRanksForPlot(p, g, node, "zigzig")
+                self.zigzagRanks.append(zigOrZagCalc(x1, x2, p1, p2, g1, g2))
+                
             self.splay(node)
             return
                 
         if p.key > node.key > g.key:  # LR Zig Zag
+            if self.trackRotations:
+                p1, x1, g1 = self.getRanksForPlot(p, g, node, "zigzag")
+                
             p.left = node.right
             g.right = node.left
             node.right = p
@@ -181,8 +235,26 @@ class SplayTree(object):
                     r.left = node
                 else:
                     r.right = node
+                    
+            if self.trackRotations:
+                p2, x2, g2 = self.getRanksForPlot(p, g, node, "zigzig")
+                self.zigzagRanks.append(zigOrZagCalc(x1, x2, p1, p2, g1, g2))
+                
             self.splay(node)
             return
+        
+    def getRanksForPlot(self, p, g, node, rotationType):
+        if rotationType == "simple":
+            pRank = log(self.size(p), 2)
+            xRank = log(self.size(node), 2)
+            return pRank, xRank
+        if rotationType in ["zigzig", "zigzag"]:
+            pRank = log(self.size(p), 2)
+            xRank = log(self.size(node), 2)
+            gRank = log(self.size(g), 2)
+            return pRank, xRank, gRank
+        else:
+            raise ValueError("rotationType: {} not supported".format(rotationType))
         
     def findParentNodeOfKey(self, key):
         """Find parent node of a key"""
@@ -196,11 +268,17 @@ class SplayTree(object):
                 node = node.right
         return parent
             
-    def recursiveheight(self, node):
+    def height(self, node):
         """Return the height of a node"""
         if node is None:
             return -1
         return max(self.height(node.left), self.height(node.right)) + 1
+    
+    def size(self, node):
+        """Return size of subtree rooted at x, including x"""
+        if node is None:
+            return 0
+        return(self.size(node.left) + self.size(node.right) + 1)
     
     def iterativeHeight(self, root):
         """Compute the height of a node, iterative because I kept blowing the stack with recursion
@@ -263,14 +341,40 @@ class SplayTree(object):
             
                 
 if __name__ == "__main__":
-    tree = SplayTree()    
+    """Sub Question 2
+    - Construct a splay tree with 100,000 nodes in random order 1,2,3,...100,000
+    - Insert key 200,000 and bring 200,000 to the top
+    - Compute the total cost of all rotations and compare with 1+3*log(100001, 2)
+    - Repeat a few times
+    """
+    tree2 = SplayTree()
     
-                
     x = range(1, 100001)
     shuffle(x)
     
     for i in x:
-        tree.insert(i)
+        tree2.insert(i)
         
-    print tree.iterativeHeight(tree.root)    
+    tree2.trackRotations = True
+    tree2.insert(200000)
     
+    # What is the total cost of operations?
+    
+    simpleFirst = [x[0] for x in tree2.simpleRanks]
+    simple3x = [x[1] for x in tree2.simpleRanks]
+    print "Simple First Sum: {}".format(sum(simpleFirst))
+    print "Simple Sum 3x Sum: {}".format(sum(simple3x))
+    
+    zigzigFirst = [x[0] for x in tree2.zigzigRanks]
+    zigzig3x = [x[1] for x in tree2.zigzigRanks]
+    print "ZigZig First Sum: {}".format(sum(zigzigFirst))
+    print "ZigZig Sum 3x Sum: {}".format(sum(zigzig3x))
+    
+    zigzagFirst = [x[0] for x in tree2.zigzagRanks]
+    zigzag3x = [x[1] for x in tree2.zigzagRanks]
+    print "ZigZag First Sum: {}".format(sum(zigzagFirst))
+    print "ZigZag Sum 3x Sum: {}".format(sum(zigzag3x))
+    
+    print "Compare: {}".format(1 + 3*log(100001, 2))
+    
+        
