@@ -343,48 +343,91 @@ class SplayTree(object):
             
                 
 if __name__ == "__main__":
+    
+    """Question 2
+    Construct a splay tree by inserting random elements. Each insert, would cause a rotation.
+    Compute 3(r2(x) - r(x)) for each type of rotation. Plot this data. i) Is it the case that the
+    difference in potential plus a constant is always less than 3(r2(x) - r(x))?"""
+    tree1 = SplayTree()
+    tree1.trackRotations = True
+    
+    n = range(1, 10)
+    shuffle(n)
+    print n
+    
+    for i in n:
+        tree1.insert(i)
+        
+    tree1.inOrderWalk()
+        
+    #Uncomment and comment out these to get the different graphs
+        
+    #simpleFirst = [x[0] for x in tree1.simpleRanks]
+    #simple3x = [x[1] for x in tree1.simpleRanks]
+    #plt.plot(range(len(simple3x)), simple3x)
+    #plt.plot(range(len(simpleFirst)), simpleFirst)
+    #plt.legend(["Simple 3(r2-r1)", "Simple Difference in Potential"])
+    #plt.show()
+    
+    #zigzigFirst = [x[0] for x in tree1.zigzigRanks]
+    #zigzig3x = [x[1] for x in tree1.zigzigRanks]
+    #plt.plot(range(len(zigzig3x)), zigzig3x)
+    #plt.plot(range(len(zigzigFirst)), zigzigFirst)
+    #plt.legend(["ZigZig 3(r2-r1)", "ZigZig Difference in Potential"])
+    #plt.show()
+        
+    #zigzagFirst = [x[0] for x in tree1.zigzagRanks]
+    #zigzag3x = [x[1] for x in tree1.zigzagRanks]
+    #plt.plot(range(len(zigzag3x)), zigzag3x)
+    #plt.plot(range(len(zigzagFirst)), zigzagFirst)
+    #plt.legend(["ZigZag 3(r2-r1)", "ZigZag Difference in Potential"])
+    #plt.show()
+        
     """Sub Question 2
     - Construct a splay tree with 100,000 nodes in random order 1,2,3,...100,000
     - Insert key 200,000 and bring 200,000 to the top
     - Compute the total cost of all rotations and compare with 1+3*log(100001, 2)
     - Repeat a few times
     """
-    tree2 = SplayTree()
     
-    x = range(1, 100001)
-    shuffle(x)
+    #totalCostsOfOperations = []
     
-    for i in x:
-        tree2.insert(i)
+    #for i in range(12):  # For repeating experiments, anything > 10 will take 10-15 minutes
+        #tree2 = SplayTree()
         
-    tree2.trackRotations = True
-    tree2.insert(200000)
+        #x = range(1, 100000)
+        #shuffle(x)
+        
+        #for i in x:
+            #tree2.insert(i)
+            
+        #tree2.trackRotations = True
+        #tree2.insert(200000)
+        
+        ## What is the total cost of operations?
+        
+        #simpleFirst = sum([x[0] for x in tree2.simpleRanks])
+        #simple3x = sum([x[1] for x in tree2.simpleRanks])
+        
+        #zigzigFirst = sum([x[0] for x in tree2.zigzigRanks])
+        #zigzig3x = sum([x[1] for x in tree2.zigzigRanks])
+        
+        #zigzagFirst = sum([x[0] for x in tree2.zigzagRanks])
+        #zigzag3x = sum([x[1] for x in tree2.zigzagRanks])
+        
+        #totalFirst = simpleFirst + zigzigFirst + zigzagFirst
+        #total3x = simple3x + zigzig3x + zigzag3x
+        
+        #totalCostsOfOperations.append([totalFirst, total3x])
+        
+    #totalFirst = [x[0] for x in totalCostsOfOperations]
+    #total3x = [x[1] for x in totalCostsOfOperations]
+        
+    #plt.plot(range(12), totalFirst, total3x)
+    #plt.axhline(y=(1+3*log(100001, 2)), color="r", linestyle="-")
+    #plt.legend(["totalCost of 200,000 insert", "Ammortized Cost 3(r2(x) - r(x))", "1 + 3*log(100001, 2)"])
     
-    # What is the total cost of operations?
+    #plt.show()
     
-    simpleFirst = [x[0] for x in tree2.simpleRanks]
-    simple3x = [x[1] for x in tree2.simpleRanks]
-    print "Simple First Sum: {}".format(sum(simpleFirst))
-    print "Simple Sum 3x Sum: {}".format(sum(simple3x))
-    
-    zigzigFirst = [x[0] for x in tree2.zigzigRanks]
-    zigzig3x = [x[1] for x in tree2.zigzigRanks]
-    print "ZigZig First Sum: {}".format(sum(zigzigFirst))
-    print "ZigZig Sum 3x Sum: {}".format(sum(zigzig3x))
-    
-    zigzagFirst = [x[0] for x in tree2.zigzagRanks]
-    zigzag3x = [x[1] for x in tree2.zigzagRanks]
-    print "ZigZag First Sum: {}".format(sum(zigzagFirst))
-    print "ZigZag Sum 3x Sum: {}".format(sum(zigzag3x))
-    
-    print "Compare: {}".format(1 + 3*log(100001, 2))
-    
-    plt.plot(zigzig3x)
-    plt.plot(zigzag3x)
-    plt.plot(simple3x)
-    
-    plt.legend(["zigzigFirst", "zigzagFirst", "simpleFirst"], loc="upper left")
-    
-    plt.show()
     
         
